@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 
@@ -9,31 +10,24 @@ import (
 	"github.com/JinFuuMugen/GophKeeper/internal/errdefs"
 )
 
-type Handler struct {
+type AuthHandler struct {
 	svc    *authService.Service
 	logger *slog.Logger
 }
 
-func NewHandler(svc *authService.Service, logger *slog.Logger) *Handler {
-	return &Handler{
+func NewAuthHandler(svc *authService.Service, logger *slog.Logger) *AuthHandler {
+	return &AuthHandler{
 		svc:    svc,
 		logger: logger,
 	}
 }
-
-// func (h *Handler) Routes() chi.Router {
-// 	r := chi.NewRouter()
-// 	r.Post("/register", h.register)
-// 	r.Post("/login", h.login)
-// 	return r
-// }
 
 type registerReq struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
 }
 
-func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req registerReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 
@@ -59,16 +53,13 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 
 	id, err := h.svc.Register(r.Context(), req.Login, req.Password)
 	if err != nil {
-		if err == errdefs.ErrUserExists {
-			err := WriteError(w, http.StatusConflict, "user already exists")
-			if err != nil {
-				h.logger.Error("cannot write error", "error", err)
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			}
+		if errors.Is(err, errdefs.ErrUserExists) {
+			_ = WriteError(w, http.StatusConflict, "user already exists")
 			return
 		}
 
-		WriteError(w, http.StatusInternalServerError, "internal error")
+		h.logger.Error("register failed", "error", err)
+		_ = WriteError(w, http.StatusInternalServerError, "internal error")
 		return
 	}
 
@@ -80,7 +71,7 @@ type loginReq struct {
 	Password string `json:"password"`
 }
 
-func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req loginReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		err := WriteError(w, http.StatusBadRequest, "invalid json")

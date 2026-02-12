@@ -14,6 +14,7 @@ import (
 	"github.com/JinFuuMugen/GophKeeper/internal/api"
 	authService "github.com/JinFuuMugen/GophKeeper/internal/auth/service"
 	"github.com/JinFuuMugen/GophKeeper/internal/database/repo"
+	itemsService "github.com/JinFuuMugen/GophKeeper/internal/items/service"
 )
 
 var buildVersion = "N/A"
@@ -29,6 +30,7 @@ func main() {
 	cfg, err := config.LoadServerConfig()
 	if err != nil {
 		logger.Error("cannot load server config", "error", err)
+		os.Exit(1)
 	}
 	logger.Info("server config loaded")
 
@@ -39,13 +41,17 @@ func main() {
 	repo, err := repo.NewRepo(ctx, cfg.DatabaseURI)
 	if err != nil {
 		logger.Error("cannot init db repository", "error", err)
+		os.Exit(1)
 	}
 	logger.Info("repo inited")
 
 	authService := authService.NewService(repo, cfg.JWTSecret, accessTTL)
 	logger.Info("auth service inited")
 
-	rout := api.InitRouter(authService, logger)
+	itemsService := itemsService.NewService(repo)
+	logger.Info("items service inited")
+
+	rout := api.InitRouter(authService, itemsService, cfg, logger)
 
 	ctx, stop := signal.NotifyContext(context.Background(),
 		syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT,
@@ -55,8 +61,8 @@ func main() {
 	srv := &http.Server{
 		Addr:         cfg.Addr,
 		Handler:      rout,
-		ReadTimeout:  10,
-		WriteTimeout: 10,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
 
 	errCh := make(chan error, 1)
