@@ -12,10 +12,8 @@
         "DATABASE_URI": "postgres://postgres:12345@localhost:5432/gophkeeper?sslmode=disable",
         "JWT_SECRET": "super-secret-key",
         "ACCESS_TTL": "15",
-        "TLS_CERT_FILE": "./cert.pem",
-        "TLS_KEY_FILE": "./key.pem"
-
-      }
+      },
+      "args": [ "-master-key", "12345"]
     },
     {
       "name": "GophKeeper Server (HTTPS TLS)",
@@ -27,7 +25,8 @@
       "args": [
         "-a", ":8443",
         "-tls-cert", "${workspaceFolder}/cert.pem",
-        "-tls-key", "${workspaceFolder}/key.pem"
+        "-tls-key", "${workspaceFolder}/key.pem",
+        "-master-key", "12345"
       ],
       "env": {
         "DATABASE_URI": "postgres://postgres:postgres@localhost:5432/gophkeeper?sslmode=disable",

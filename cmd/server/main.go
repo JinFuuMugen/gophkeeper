@@ -13,7 +13,6 @@ import (
 	"github.com/JinFuuMugen/GophKeeper/config"
 	"github.com/JinFuuMugen/GophKeeper/internal/api"
 	authService "github.com/JinFuuMugen/GophKeeper/internal/auth/service"
-	"github.com/JinFuuMugen/GophKeeper/internal/cryptokit"
 	"github.com/JinFuuMugen/GophKeeper/internal/database/repo"
 	itemsService "github.com/JinFuuMugen/GophKeeper/internal/items/service"
 )
@@ -23,7 +22,6 @@ var buildDate = "N/A"
 var buildCommit = "N/A"
 
 func main() {
-
 	fmt.Printf("Build version: %s\nBuild date: %s\nBuild commit: %s\n", buildVersion, buildDate, buildCommit)
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
@@ -36,7 +34,6 @@ func main() {
 	logger.Info("server config loaded")
 
 	accessTTL := time.Duration(cfg.AccessTTL) * time.Minute
-
 	ctx := context.Background()
 
 	repo, err := repo.NewRepo(ctx, cfg.DatabaseURI)
@@ -48,13 +45,6 @@ func main() {
 
 	authSvc := authService.NewService(repo, cfg.JWTSecret, accessTTL)
 	logger.Info("auth service inited")
-
-	crypt, err := cryptokit.NewFromBase64(cfg.MasterKeyB64)
-	if err != nil {
-		logger.Error("cannot init master crypt", "error", err)
-		os.Exit(1)
-	}
-	logger.Info("master crypt inited")
 
 	itemsSvc := itemsService.NewService(repo)
 	logger.Info("items service inited")
@@ -81,7 +71,7 @@ func main() {
 			logger.Info("server starting with TLS", "addr", cfg.Addr, "cert", cfg.TLSCertFile, "key", cfg.TLSKeyFile)
 			runErr = srv.ListenAndServeTLS(cfg.TLSCertFile, cfg.TLSKeyFile)
 		} else {
-			logger.Info("server starting without TLS (HTTP)", "addr", cfg.Addr)
+			logger.Info("server starting without TLS", "addr", cfg.Addr)
 			runErr = srv.ListenAndServe()
 		}
 
@@ -111,5 +101,4 @@ func main() {
 	} else {
 		logger.Info("http server stopped")
 	}
-
 }
