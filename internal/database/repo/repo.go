@@ -42,10 +42,16 @@ func (r *Repo) CreateUser(ctx context.Context, id uuid.UUID, login, passwordHash
 }
 
 func (r *Repo) GetUserByLogin(ctx context.Context, login string) (models.User, error) {
-	const q = `SELECT id, login, password_hash, created_at FROM users WHERE login=$1`
+	const q = `SELECT id, login, password_hash, created_at, kdf_salt FROM users WHERE login=$1`
 
 	var u models.User
-	err := r.pool.QueryRow(ctx, q, login).Scan(&u.ID, &u.Login, &u.PasswordHash, &u.CreatedAt)
+	err := r.pool.QueryRow(ctx, q, login).Scan(
+		&u.ID,
+		&u.Login,
+		&u.PasswordHash,
+		&u.CreatedAt,
+		&u.KDFSalt,
+	)
 	if err == nil {
 		return u, nil
 	}

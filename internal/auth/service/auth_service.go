@@ -55,20 +55,20 @@ func (s *Service) Register(ctx context.Context, login, password string) (uuid.UU
 	return id, nil
 }
 
-func (s *Service) Login(ctx context.Context, login, password string) (string, error) {
+func (s *Service) Login(ctx context.Context, login, password string) (string, models.User, error) {
 	u, err := s.repo.GetUserByLogin(ctx, login)
 	if err != nil {
-		return "", fmt.Errorf("login failed: %w", err)
+		return "", u, fmt.Errorf("login failed: %w", err)
 	}
 
 	if !auth.CheckPassword(u.PasswordHash, password) {
-		return "", errdefs.ErrInvalidCredentials
+		return "", models.User{}, errdefs.ErrInvalidCredentials
 	}
 
 	token, err := auth.NewToken(u.ID.String(), s.jwtSecret, s.accessTTL)
 	if err != nil {
-		return "", fmt.Errorf("token generation failed: %w", err)
+		return "", models.User{}, fmt.Errorf("token generation failed: %w", err)
 	}
 
-	return token, nil
+	return token, u, nil
 }

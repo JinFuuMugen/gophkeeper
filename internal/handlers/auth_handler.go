@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -71,6 +72,11 @@ type loginReq struct {
 	Password string `json:"password"`
 }
 
+type loginResponse struct {
+	Token      string `json:"token"`
+	KDFSaltB64 string `json:"kdf_salt_b64"`
+}
+
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req loginReq
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -88,7 +94,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := h.svc.Login(r.Context(), req.Login, req.Password)
+	token, u, err := h.svc.Login(r.Context(), req.Login, req.Password)
 	if err != nil {
 		err := WriteError(w, http.StatusUnauthorized, "invalid credentials")
 		if err != nil {
@@ -99,5 +105,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	WriteJSON(w, http.StatusOK, map[string]any{"access_token": token})
+	saltB64 := base64.StdEncoding.EncodeToString(u.KDFSalt)
+
+	WriteJSON(w, http.StatusOK, loginResponse{Token: token, KDFSaltB64: saltB64})
 }

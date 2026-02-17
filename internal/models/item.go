@@ -7,12 +7,9 @@ import (
 )
 
 type Item struct {
-	ID     uuid.UUID
-	UserID uuid.UUID
-	Type   string
-
-	Data []byte
-
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	Type      string
 	Encrypted []byte
 
 	Metadata  string

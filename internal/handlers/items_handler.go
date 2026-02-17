@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -22,23 +23,23 @@ func NewItemsHandler(svc *itemsvc.Service, logger *slog.Logger) *ItemsHandler {
 }
 
 type upsertItemReq struct {
-	ID       string `json:"id,omitempty"`
-	Type     string `json:"type"`
-	Data     []byte `json:"data"`
-	Metadata string `json:"metadata,omitempty"`
-	Version  int64  `json:"version,omitempty"`
-	Deleted  bool   `json:"deleted,omitempty"`
+	ID           string `json:"id,omitempty"`
+	Type         string `json:"type"`
+	EncryptedB64 string `json:"encrypted_b64,omitempty"`
+	Metadata     string `json:"metadata,omitempty"`
+	Version      int64  `json:"version,omitempty"`
+	Deleted      bool   `json:"deleted,omitempty"`
 }
 
 type itemResp struct {
-	ID        string    `json:"id"`
-	Type      string    `json:"type"`
-	Data      []byte    `json:"data,omitempty"`
-	Metadata  string    `json:"metadata"`
-	Version   int64     `json:"version"`
-	Deleted   bool      `json:"deleted"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID           string    `json:"id"`
+	Type         string    `json:"type"`
+	EncryptedB64 string    `json:"encrypted_b64,omitempty"`
+	Metadata     string    `json:"metadata"`
+	Version      int64     `json:"version"`
+	Deleted      bool      `json:"deleted"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 func toItemResp(it models.Item) itemResp {
@@ -51,9 +52,10 @@ func toItemResp(it models.Item) itemResp {
 		CreatedAt: it.CreatedAt,
 		UpdatedAt: it.UpdatedAt,
 	}
-	if !it.Deleted {
-		resp.Data = it.Data
+	if !it.Deleted && len(it.Encrypted) > 0 {
+		resp.EncryptedB64 = base64.StdEncoding.EncodeToString(it.Encrypted)
 	}
+
 	return resp
 }
 
@@ -80,14 +82,28 @@ func (h *ItemsHandler) UpsertItem(w http.ResponseWriter, r *http.Request) {
 		id = parsed
 	}
 
+	var encrypted []byte
+	if !req.Deleted {
+		if req.EncryptedB64 == "" {
+			WriteError(w, http.StatusBadRequest, "encrypted_b64 required")
+			return
+		}
+		b, err := base64.StdEncoding.DecodeString(req.EncryptedB64)
+		if err != nil {
+			WriteError(w, http.StatusBadRequest, "invalid encrypted_b64 (expected base64)")
+			return
+		}
+		encrypted = b
+	}
+
 	saved, err := h.svc.Upsert(r.Context(), models.Item{
-		ID:       id,
-		UserID:   userID,
-		Type:     req.Type,
-		Data:     req.Data,
-		Metadata: req.Metadata,
-		Version:  req.Version,
-		Deleted:  req.Deleted,
+		ID:        id,
+		UserID:    userID,
+		Type:      req.Type,
+		Encrypted: encrypted,
+		Metadata:  req.Metadata,
+		Version:   req.Version,
+		Deleted:   req.Deleted,
 	})
 	if err != nil {
 		h.logger.Error("upsert item failed", "error", err)
