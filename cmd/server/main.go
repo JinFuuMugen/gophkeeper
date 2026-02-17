@@ -56,7 +56,7 @@ func main() {
 	}
 	logger.Info("master crypt inited")
 
-	itemsSvc := itemsService.NewService(repo, crypt)
+	itemsSvc := itemsService.NewService(repo)
 	logger.Info("items service inited")
 
 	rout := api.InitRouter(authSvc, itemsSvc, cfg, logger)
