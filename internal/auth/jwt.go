@@ -33,7 +33,7 @@ func ParseToken(tokenString string, secret string) (*Claims, error) {
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("cannot pasre jwt: %w", err)
+		return nil, fmt.Errorf("cannot parse jwt: %w", err)
 	}
 
 	claims, ok := t.Claims.(*Claims)

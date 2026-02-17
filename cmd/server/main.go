@@ -45,13 +45,13 @@ func main() {
 	}
 	logger.Info("repo inited")
 
-	authService := authService.NewService(repo, cfg.JWTSecret, accessTTL)
+	authSvc := authService.NewService(repo, cfg.JWTSecret, accessTTL)
 	logger.Info("auth service inited")
 
-	itemsService := itemsService.NewService(repo)
+	itemsSvc := itemsService.NewService(repo)
 	logger.Info("items service inited")
 
-	rout := api.InitRouter(authService, itemsService, cfg, logger)
+	rout := api.InitRouter(authSvc, itemsSvc, cfg, logger)
 
 	ctx, stop := signal.NotifyContext(context.Background(),
 		syscall.SIGTERM, syscall.SIGINT, syscall.SIGQUIT,
