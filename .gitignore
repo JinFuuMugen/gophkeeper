@@ -774,3 +774,8 @@ client
 
 #Certs
 *.pem
+
+.vscode
+vscode
+./.vscode
+*.json
