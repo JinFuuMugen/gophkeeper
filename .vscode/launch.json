@@ -1,0 +1,39 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "GophKeeper Server (HTTP)",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/cmd/server",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "DATABASE_URI": "postgres://postgres:12345@localhost:5432/gophkeeper?sslmode=disable",
+        "JWT_SECRET": "super-secret-key",
+        "ACCESS_TTL": "15",
+        "TLS_CERT_FILE": "./cert.pem",
+        "TLS_KEY_FILE": "./key.pem"
+
+      }
+    },
+    {
+      "name": "GophKeeper Server (HTTPS TLS)",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/cmd/server",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "-a", ":8443",
+        "-tls-cert", "${workspaceFolder}/cert.pem",
+        "-tls-key", "${workspaceFolder}/key.pem"
+      ],
+      "env": {
+        "DATABASE_URI": "postgres://postgres:postgres@localhost:5432/gophkeeper?sslmode=disable",
+        "JWT_SECRET": "super-secret-key",
+        "ACCESS_TTL": "15"
+      }
+    }
+  ]
+}

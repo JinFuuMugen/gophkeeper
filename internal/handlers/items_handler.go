@@ -22,18 +22,18 @@ func NewItemsHandler(svc *itemsvc.Service, logger *slog.Logger) *ItemsHandler {
 }
 
 type upsertItemReq struct {
-	ID        string `json:"id,omitempty"`
-	Type      string `json:"type"`
-	Encrypted []byte `json:"encrypted"`
-	Metadata  string `json:"metadata,omitempty"`
-	Version   int64  `json:"version,omitempty"`
-	Deleted   bool   `json:"deleted,omitempty"`
+	ID       string `json:"id,omitempty"`
+	Type     string `json:"type"`
+	Data     []byte `json:"data"`
+	Metadata string `json:"metadata,omitempty"`
+	Version  int64  `json:"version,omitempty"`
+	Deleted  bool   `json:"deleted,omitempty"`
 }
 
 type itemResp struct {
 	ID        string    `json:"id"`
 	Type      string    `json:"type"`
-	Encrypted []byte    `json:"encrypted"`
+	Data      []byte    `json:"data,omitempty"`
 	Metadata  string    `json:"metadata"`
 	Version   int64     `json:"version"`
 	Deleted   bool      `json:"deleted"`
@@ -42,16 +42,19 @@ type itemResp struct {
 }
 
 func toItemResp(it models.Item) itemResp {
-	return itemResp{
+	resp := itemResp{
 		ID:        it.ID.String(),
 		Type:      it.Type,
-		Encrypted: it.Encrypted,
 		Metadata:  it.Metadata,
 		Version:   it.Version,
 		Deleted:   it.Deleted,
 		CreatedAt: it.CreatedAt,
 		UpdatedAt: it.UpdatedAt,
 	}
+	if !it.Deleted {
+		resp.Data = it.Data
+	}
+	return resp
 }
 
 func (h *ItemsHandler) UpsertItem(w http.ResponseWriter, r *http.Request) {
@@ -78,13 +81,13 @@ func (h *ItemsHandler) UpsertItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	saved, err := h.svc.Upsert(r.Context(), models.Item{
-		ID:        id,
-		UserID:    userID,
-		Type:      req.Type,
-		Encrypted: req.Encrypted,
-		Metadata:  req.Metadata,
-		Version:   req.Version,
-		Deleted:   req.Deleted,
+		ID:       id,
+		UserID:   userID,
+		Type:     req.Type,
+		Data:     req.Data,
+		Metadata: req.Metadata,
+		Version:  req.Version,
+		Deleted:  req.Deleted,
 	})
 	if err != nil {
 		h.logger.Error("upsert item failed", "error", err)

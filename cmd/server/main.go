@@ -13,6 +13,7 @@ import (
 	"github.com/JinFuuMugen/GophKeeper/config"
 	"github.com/JinFuuMugen/GophKeeper/internal/api"
 	authService "github.com/JinFuuMugen/GophKeeper/internal/auth/service"
+	"github.com/JinFuuMugen/GophKeeper/internal/cryptokit"
 	"github.com/JinFuuMugen/GophKeeper/internal/database/repo"
 	itemsService "github.com/JinFuuMugen/GophKeeper/internal/items/service"
 )
@@ -48,7 +49,14 @@ func main() {
 	authSvc := authService.NewService(repo, cfg.JWTSecret, accessTTL)
 	logger.Info("auth service inited")
 
-	itemsSvc := itemsService.NewService(repo)
+	crypt, err := cryptokit.NewFromBase64(cfg.MasterKeyB64)
+	if err != nil {
+		logger.Error("cannot init master crypt", "error", err)
+		os.Exit(1)
+	}
+	logger.Info("master crypt inited")
+
+	itemsSvc := itemsService.NewService(repo, crypt)
 	logger.Info("items service inited")
 
 	rout := api.InitRouter(authSvc, itemsSvc, cfg, logger)
@@ -67,8 +75,18 @@ func main() {
 
 	errCh := make(chan error, 1)
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			errCh <- err
+		var runErr error
+
+		if cfg.TLSCertFile != "" && cfg.TLSKeyFile != "" {
+			logger.Info("server starting with TLS", "addr", cfg.Addr, "cert", cfg.TLSCertFile, "key", cfg.TLSKeyFile)
+			runErr = srv.ListenAndServeTLS(cfg.TLSCertFile, cfg.TLSKeyFile)
+		} else {
+			logger.Info("server starting without TLS (HTTP)", "addr", cfg.Addr)
+			runErr = srv.ListenAndServe()
+		}
+
+		if runErr != nil && runErr != http.ErrServerClosed {
+			errCh <- runErr
 		}
 		close(errCh)
 	}()

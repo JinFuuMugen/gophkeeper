@@ -771,3 +771,6 @@ FodyWeavers.xsd
 # Binaries
 server
 client
+
+#Certs
+*.pem
