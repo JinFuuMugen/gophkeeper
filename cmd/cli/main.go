@@ -1,12 +1,25 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+
+	"github.com/JinFuuMugen/GophKeeper/internal/cliapp"
+)
 
 var buildVersion = "N/A"
 var buildDate = "N/A"
 var buildCommit = "N/A"
 
 func main() {
-	fmt.Printf("Build version: %s\nBuild date: %s\nBuild commit: %s\n", buildVersion, buildDate, buildCommit)
+	app := cliapp.New(cliapp.BuildInfo{
+		Version: buildVersion,
+		Date:    buildDate,
+		Commit:  buildCommit,
+	})
 
+	if err := app.Run(os.Args[1:]); err != nil {
+		fmt.Fprintln(os.Stderr, "error:", err)
+		os.Exit(1)
+	}
 }

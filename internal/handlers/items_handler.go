@@ -83,7 +83,9 @@ func (h *ItemsHandler) UpsertItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var encrypted []byte
-	if !req.Deleted {
+	if req.Deleted {
+		encrypted = []byte{}
+	} else {
 		if req.EncryptedB64 == "" {
 			WriteError(w, http.StatusBadRequest, "encrypted_b64 required")
 			return
