@@ -10,27 +10,24 @@ import (
 
 var errNoJWTSecret = errors.New("no JWT secret provided")
 var errNoDatabaseURI = errors.New("no database URI provided")
-var errNoMasterKey = errors.New("no master key provided")
 
 type ServerConfig struct {
-	Addr         string
-	DatabaseURI  string
-	JWTSecret    string
-	AccessTTL    int
-	TLSCertFile  string
-	TLSKeyFile   string
-	MasterKeyB64 string
+	Addr        string
+	DatabaseURI string
+	JWTSecret   string
+	AccessTTL   int
+	TLSCertFile string
+	TLSKeyFile  string
 }
 
 func LoadServerConfig() (*ServerConfig, error) {
 	cfg := ServerConfig{
-		Addr:         "localhost:8080",
-		DatabaseURI:  "",
-		JWTSecret:    "",
-		AccessTTL:    15,
-		TLSCertFile:  "",
-		TLSKeyFile:   "",
-		MasterKeyB64: "",
+		Addr:        "localhost:8080",
+		DatabaseURI: "",
+		JWTSecret:   "",
+		AccessTTL:   15,
+		TLSCertFile: "",
+		TLSKeyFile:  "",
 	}
 
 	flag.StringVar(&cfg.Addr, "a", "localhost:8080", "server address")
@@ -39,7 +36,6 @@ func LoadServerConfig() (*ServerConfig, error) {
 	flag.IntVar(&cfg.AccessTTL, "attl", 15, "access ttl")
 	flag.StringVar(&cfg.TLSCertFile, "tls-cert", "", "path to TLS certificate file ")
 	flag.StringVar(&cfg.TLSKeyFile, "tls-key", "", "path to TLS private key file")
-	flag.StringVar(&cfg.MasterKeyB64, "master-key", "", "base64 of 32 bytes AES-256 master key")
 
 	flag.Parse()
 
@@ -80,16 +76,8 @@ func LoadServerConfig() (*ServerConfig, error) {
 		cfg.TLSKeyFile = v
 	}
 
-	if v, ok := os.LookupEnv("MASTER_KEY_B64"); ok {
-		cfg.MasterKeyB64 = v
-	}
-
 	if (cfg.TLSCertFile == "") != (cfg.TLSKeyFile == "") {
 		return nil, fmt.Errorf("cannot load server config: both TLS_CERT_FILE and TLS_KEY_FILE must be set or both empty")
-	}
-
-	if cfg.MasterKeyB64 == "" {
-		return nil, fmt.Errorf("cannot load server config: %w", errNoMasterKey)
 	}
 
 	return &cfg, nil
