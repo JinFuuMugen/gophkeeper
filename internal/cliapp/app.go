@@ -192,7 +192,7 @@ func (a *App) cmdLogin(args []string) error {
 
 type payloadText struct {
 	Text     string `json:"text"`
-	Metadata string `json:"metadata,omitempty"` // sensitive meta, inside ciphertext
+	Metadata string `json:"metadata,omitempty"`
 }
 
 type payloadLogin struct {
@@ -212,7 +212,7 @@ type payloadCard struct {
 
 type payloadBinary struct {
 	Filename string `json:"filename"`
-	Data     []byte `json:"data"` // json will base64 it
+	Data     []byte `json:"data"`
 	Metadata string `json:"metadata,omitempty"`
 }
 
