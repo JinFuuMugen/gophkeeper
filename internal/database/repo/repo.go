@@ -14,8 +14,19 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+type poolIface interface {
+	Exec(ctx context.Context, sql string, arguments ...any) (pgconn.CommandTag, error)
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+	Ping(ctx context.Context) error
+	Close()
+}
 type Repo struct {
-	pool *pgxpool.Pool
+	pool poolIface
+}
+
+func NewRepoFromPool(pool poolIface) *Repo {
+	return &Repo{pool: pool}
 }
 
 func NewRepo(ctx context.Context, databaseURI string) (*Repo, error) {

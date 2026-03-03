@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"time"
 
-	itemsvc "github.com/JinFuuMugen/GophKeeper/internal/items/service"
 	"github.com/JinFuuMugen/GophKeeper/internal/middleware"
 	"github.com/JinFuuMugen/GophKeeper/internal/models"
 	"github.com/google/uuid"
@@ -25,7 +24,7 @@ type ItemsHandler struct {
 	logger *slog.Logger
 }
 
-func NewItemsHandler(svc *itemsvc.Service, logger *slog.Logger) *ItemsHandler {
+func NewItemsHandler(svc ItemsService, logger *slog.Logger) *ItemsHandler {
 	return &ItemsHandler{svc: svc, logger: logger}
 }
 
@@ -49,7 +48,7 @@ type itemResp struct {
 	UpdatedAt    time.Time `json:"updated_at"`
 }
 
-func toItemResp(it models.Item) itemResp {
+func ToItemResp(it models.Item) itemResp {
 	resp := itemResp{
 		ID:        it.ID.String(),
 		Type:      it.Type,
@@ -120,7 +119,7 @@ func (h *ItemsHandler) UpsertItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	WriteJSON(w, http.StatusOK, toItemResp(saved))
+	WriteJSON(w, http.StatusOK, ToItemResp(saved))
 }
 
 func (h *ItemsHandler) ListItems(w http.ResponseWriter, r *http.Request) {
@@ -139,7 +138,7 @@ func (h *ItemsHandler) ListItems(w http.ResponseWriter, r *http.Request) {
 
 	resp := make([]itemResp, 0, len(items))
 	for _, it := range items {
-		resp = append(resp, toItemResp(it))
+		resp = append(resp, ToItemResp(it))
 	}
 	WriteJSON(w, http.StatusOK, resp)
 }
@@ -172,7 +171,7 @@ func (h *ItemsHandler) SyncItems(w http.ResponseWriter, r *http.Request) {
 
 	resp := make([]itemResp, 0, len(items))
 	for _, it := range items {
-		resp = append(resp, toItemResp(it))
+		resp = append(resp, ToItemResp(it))
 	}
 	WriteJSON(w, http.StatusOK, resp)
 }

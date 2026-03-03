@@ -23,6 +23,7 @@ import (
 func TestCLI_TextLifecycle_EndToEnd(t *testing.T) {
 	home := t.TempDir()
 	setHomeForTests(t, home)
+	setPasswrodForTests(t, "12345")
 
 	s := newFakeServer(t)
 	ts := httptest.NewServer(s.mux())
@@ -35,7 +36,6 @@ func TestCLI_TextLifecycle_EndToEnd(t *testing.T) {
 			"register",
 			"--server", ts.URL,
 			"--login", "test_user",
-			"--password", "12345",
 		})
 		if err != nil {
 			t.Fatalf("register failed: %v", err)
@@ -50,7 +50,6 @@ func TestCLI_TextLifecycle_EndToEnd(t *testing.T) {
 			"login",
 			"--server", ts.URL,
 			"--login", "test_user",
-			"--password", "12345",
 		})
 		if err != nil {
 			t.Fatalf("login failed: %v", err)
@@ -143,6 +142,11 @@ func setHomeForTests(t *testing.T, home string) {
 	t.Helper()
 	t.Setenv("HOME", home)
 	t.Setenv("USERPROFILE", home)
+}
+
+func setPasswrodForTests(t *testing.T, pass string) {
+	t.Helper()
+	t.Setenv("GK_PASSWORD", "12345")
 }
 
 func captureStdout(t *testing.T, fn func()) string {

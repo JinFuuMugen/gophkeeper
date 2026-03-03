@@ -30,9 +30,15 @@ func (f *fakeUserRepo) GetUserByLogin(ctx context.Context, login string) (models
 
 func TestRegister_UserExists(t *testing.T) {
 	repo := &fakeUserRepo{
-		existsLoginFn:    func(ctx context.Context, login string) (bool, error) { return true, nil },
-		createUserFn:     func(ctx context.Context, id uuid.UUID, login, passwordHash string) error { return nil },
-		getUserByLoginFn: func(ctx context.Context, login string) (models.User, error) { return models.User{}, nil },
+		existsLoginFn: func(ctx context.Context, login string) (bool, error) {
+			return true, nil
+		},
+		createUserFn: func(ctx context.Context, id uuid.UUID, login, passwordHash string) error {
+			return errdefs.ErrUserExists
+		},
+		getUserByLoginFn: func(ctx context.Context, login string) (models.User, error) {
+			return models.User{}, nil
+		},
 	}
 
 	svc := authsvc.NewService(repo, "secret", time.Minute)

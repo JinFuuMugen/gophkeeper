@@ -8,7 +8,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	authService "github.com/JinFuuMugen/GophKeeper/internal/auth/service"
 	"github.com/JinFuuMugen/GophKeeper/internal/errdefs"
 	"github.com/JinFuuMugen/GophKeeper/internal/models"
 	"github.com/google/uuid"
@@ -24,7 +23,7 @@ type AuthHandler struct {
 	logger *slog.Logger
 }
 
-func NewAuthHandler(svc *authService.Service, logger *slog.Logger) *AuthHandler {
+func NewAuthHandler(svc AuthService, logger *slog.Logger) *AuthHandler {
 	return &AuthHandler{
 		svc:    svc,
 		logger: logger,
