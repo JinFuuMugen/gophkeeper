@@ -1,11 +1,14 @@
 package auth
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
+
+var errWrongSigningMethod = errors.New("wrong token signing method")
 
 type Claims struct {
 	UserID string `json:"uid"`
@@ -29,7 +32,11 @@ func NewToken(userID string, secret string, ttl time.Duration) (string, error) {
 func ParseToken(tokenString string, secret string) (*Claims, error) {
 
 	t, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (any, error) {
-		return []byte(secret), nil
+		if token.Method == jwt.SigningMethodHS256 {
+			return []byte(secret), nil
+		} else {
+			return nil, errWrongSigningMethod
+		}
 	})
 
 	if err != nil {

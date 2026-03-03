@@ -32,14 +32,6 @@ func NewService(repo userRepo, jwtSecret string, accessTTL time.Duration) *Servi
 }
 
 func (s *Service) Register(ctx context.Context, login, password string) (uuid.UUID, error) {
-	exists, err := s.repo.ExistsLogin(ctx, login)
-	if err != nil {
-		return uuid.Nil, fmt.Errorf("register failed: %w", err)
-	}
-
-	if exists {
-		return uuid.Nil, errdefs.ErrUserExists
-	}
 
 	id := uuid.New()
 
@@ -49,7 +41,11 @@ func (s *Service) Register(ctx context.Context, login, password string) (uuid.UU
 	}
 
 	if err := s.repo.CreateUser(ctx, id, login, hash); err != nil {
-		return uuid.Nil, fmt.Errorf("create user failed: %w", err)
+		if err == errdefs.ErrUserExists {
+			return uuid.Nil, err
+		} else {
+			return uuid.Nil, fmt.Errorf("create user failed: %w", err)
+		}
 	}
 
 	return id, nil

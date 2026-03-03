@@ -30,8 +30,35 @@ func SaveConfig(dir string, cfg Config) error {
 	if err != nil {
 		return fmt.Errorf("marshal config: %w", err)
 	}
-	if err := os.WriteFile(configPath(dir), b, 0o600); err != nil {
-		return fmt.Errorf("write config: %w", err)
+
+	final := configPath(dir)
+	tmp := final + ".tmp"
+
+	f, err := os.OpenFile(tmp, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o600)
+	if err != nil {
+		return fmt.Errorf("open tmp: %w", err)
+	}
+	_, err = f.Write(b)
+	if err != nil {
+		_ = os.Remove(tmp)
+		return fmt.Errorf("write tmp: %w", err)
+	}
+
+	err = f.Sync()
+	if err != nil {
+		_ = os.Remove(tmp)
+		return fmt.Errorf("sync tmp: %w", err)
+	}
+
+	err = f.Close()
+	if err != nil {
+		_ = os.Remove(tmp)
+		return fmt.Errorf("close tmp: %w", err)
+	}
+
+	if err := os.Rename(tmp, final); err != nil {
+		_ = os.Remove(tmp)
+		return fmt.Errorf("rename tmp to final: %w", err)
 	}
 	return nil
 }

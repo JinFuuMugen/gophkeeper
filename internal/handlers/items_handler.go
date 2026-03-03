@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"log/slog"
@@ -13,8 +14,14 @@ import (
 	"github.com/google/uuid"
 )
 
+type ItemsService interface {
+	Upsert(ctx context.Context, it models.Item) (models.Item, error)
+	List(ctx context.Context, userID uuid.UUID) ([]models.Item, error)
+	SyncSince(ctx context.Context, userID uuid.UUID, since time.Time) ([]models.Item, error)
+}
+
 type ItemsHandler struct {
-	svc    *itemsvc.Service
+	svc    ItemsService
 	logger *slog.Logger
 }
 
@@ -109,7 +116,7 @@ func (h *ItemsHandler) UpsertItem(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		h.logger.Error("upsert item failed", "error", err)
-		WriteError(w, http.StatusBadRequest, err.Error())
+		WriteError(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 		return
 	}
 

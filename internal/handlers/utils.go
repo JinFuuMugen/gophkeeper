@@ -17,6 +17,10 @@ func WriteJSON(w http.ResponseWriter, code int, v any) error {
 	return nil
 }
 
-func WriteError(w http.ResponseWriter, code int, msg string) error {
-	return WriteJSON(w, code, map[string]any{"error": msg})
+func WriteError(w http.ResponseWriter, code int, msg string) {
+	if err := WriteJSON(w, code, map[string]any{"error": msg}); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(http.StatusText(http.StatusInternalServerError)))
+		return
+	}
 }

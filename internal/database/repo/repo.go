@@ -10,6 +10,7 @@ import (
 	"github.com/JinFuuMugen/GophKeeper/internal/models"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -36,6 +37,13 @@ func (r *Repo) CreateUser(ctx context.Context, id uuid.UUID, login, passwordHash
 	_, err := r.pool.Exec(ctx, q, id, login, passwordHash)
 	if err == nil {
 		return nil
+	}
+
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		if pgErr.Code == "23505" {
+			return errdefs.ErrUserExists
+		}
 	}
 
 	return fmt.Errorf("cannot create user: %w", err)

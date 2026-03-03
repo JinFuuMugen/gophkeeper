@@ -33,6 +33,11 @@ func main() {
 	}
 	logger.Info("server config loaded")
 
+	if err := config.ValidateConfig(cfg); err != nil {
+		logger.Error("cannot validate config", "error", err)
+		os.Exit(1)
+	}
+
 	accessTTL := time.Duration(cfg.AccessTTL) * time.Minute
 	ctx := context.Background()
 

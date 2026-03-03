@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+
+	"github.com/JinFuuMugen/GophKeeper/internal/errdefs"
 )
 
 var errNoJWTSecret = errors.New("no JWT secret provided")
@@ -18,6 +20,14 @@ type ServerConfig struct {
 	AccessTTL   int
 	TLSCertFile string
 	TLSKeyFile  string
+}
+
+func ValidateConfig(cfg *ServerConfig) error {
+	if cfg.Addr == "" || cfg.AccessTTL <= 0 || cfg.JWTSecret == "" || cfg.DatabaseURI == "" {
+		return errdefs.ErrBadConfigValue
+	}
+
+	return nil
 }
 
 func LoadServerConfig() (*ServerConfig, error) {
