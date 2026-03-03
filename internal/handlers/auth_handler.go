@@ -40,12 +40,6 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 
 		WriteError(w, http.StatusBadRequest, "invalid json")
-		if err != nil {
-			h.logger.Error("cannot write error", "error", err)
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
-
 		return
 	}
 
